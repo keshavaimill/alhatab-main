@@ -6,10 +6,44 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-SMTP_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
-SMTP_PORT = int(os.getenv("MAIL_PORT", 587))
-SMTP_USER = os.getenv("MAIL_USERNAME")
-SMTP_PASSWORD = os.getenv("MAIL_PASSWORD")
+
+import logging
+
+def setup_logger():
+    """
+    Sets up a logger with a console handler.
+    """
+    # Create a logger
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)  # Set minimum log level
+
+    # Prevent adding multiple handlers if setup_logger is called multiple times
+    if not logger.handlers:
+        # Create console handler
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG)  # Handler log level
+
+        # Create formatter for log messages
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+        console_handler.setFormatter(formatter)
+
+        # Add handler to logger
+        logger.addHandler(console_handler)
+
+    return logger
+logger = setup_logger()
+try:
+    logger.info("📧 Mailer configuration loaded")
+    SMTP_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+    SMTP_PORT = int(os.getenv("MAIL_PORT", 587))
+    SMTP_USER = os.getenv("MAIL_USERNAME")
+    SMTP_PASSWORD = os.getenv("MAIL_PASSWORD")
+
+except:
+    logger.error("❌ Failed to load mailer configuration")
+    
 
 ALERT_EMAILS = [
     e.strip()
@@ -19,7 +53,7 @@ ALERT_EMAILS = [
 
 def send_success_email(subject, body):
     if not ALERT_EMAILS:
-        print("⚠️ ALERT_EMAILS not configured")
+        logger.info("⚠️ ALERT_EMAILS not configured")
         return
 
     msg = MIMEMultipart()
@@ -34,7 +68,7 @@ def send_success_email(subject, body):
         server.login(SMTP_USER, SMTP_PASSWORD)
         server.send_message(msg)
         server.quit()
-        print("✅ Email sent")
+        logger.info("✅ Email sent")
     except Exception as e:
-        print("❌ Email failed:", e)
+        logger.info("❌ Email failed:", e)
 

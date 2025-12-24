@@ -2,6 +2,33 @@ import json
 import re
 from config import config
 from utils.llm_factory import load_llm
+import logging
+
+def setup_logger():
+    """
+    Sets up a logger with a console handler.
+    """
+    # Create a logger
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)  # Set minimum log level
+
+    # Prevent adding multiple handlers if setup_logger is called multiple times
+    if not logger.handlers:
+        # Create console handler
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG)  # Handler log level
+
+        # Create formatter for log messages
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+        console_handler.setFormatter(formatter)
+
+        # Add handler to logger
+        logger.addHandler(console_handler)
+
+    return logger
+logger = setup_logger()
 
 # -----------------------------
 # Load LLM
@@ -10,7 +37,7 @@ def get_llm(max_tokens: int):
     # Reload model with token limit for retries
     return load_llm(temp=0, max_tokens=max_tokens)
 
-print("🤖 LLM Provider:", config.LLM_PROVIDER)
+logger.info("🤖 LLM Provider:", config.LLM_PROVIDER)
 
 # -----------------------------
 # LLM PROMPT
@@ -111,14 +138,14 @@ def generate_llm_summary(sql_query: str, row_count: int | None = None) -> dict:
 
     for attempt, max_tokens in enumerate(max_tokens_list, start=1):
         try:
-            print(f"🚀 Calling LLM (attempt {attempt}, max_tokens={max_tokens})...")
+            logger.info(f"🚀 Calling LLM (attempt {attempt}, max_tokens={max_tokens})...")
             llm = get_llm(max_tokens)
 
             raw_text = call_llm(prompt, llm)
 
-            print("🧠 RAW LLM OUTPUT ↓↓↓")
-            print(raw_text)
-            print("🧠 RAW LLM OUTPUT ↑↑↑")
+            logger.info("🧠 RAW LLM OUTPUT ↓↓↓")
+            logger.info(raw_text)
+            logger.info("🧠 RAW LLM OUTPUT ↑↑↑")
 
             parsed = extract_json(raw_text)
 
@@ -128,7 +155,7 @@ def generate_llm_summary(sql_query: str, row_count: int | None = None) -> dict:
             }
 
         except Exception as e:
-            print(f"❌ LLM attempt {attempt} failed:", e)
+            logger.info(f"❌ LLM attempt {attempt} failed:", e)
 
-    print("⚠️ All LLM attempts failed. Using fallback.")
-    return fallback_summ
+    logger.info("⚠️ All LLM attempts failed. Using fallback.")
+    return fallback_summary(row_count)
