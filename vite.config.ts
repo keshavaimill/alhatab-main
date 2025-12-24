@@ -10,9 +10,8 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     proxy: {
       "/api/text2sql": {
-        // Proxy to local Text2SQL_V2-main backend (runs on port 5000)
-        // For production, this should point to the deployed backend URL
-        target: process.env.VITE_TEXT2SQL_API_URL || "http://localhost:5000",
+        
+        target: process.env.VITE_TEXT2SQL_API_URL,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/text2sql/, ""),
       },

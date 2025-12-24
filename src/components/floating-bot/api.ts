@@ -1,14 +1,9 @@
-// API client for Text2SQL backend
-// NOTE: Chatbot traffic must always go to the Text2SQL service below.
-// For local development, use http://localhost:5000 (where Text2SQL_V2-main runs)
-// For production, use the deployed URL (e.g., https://text2sql-v2.onrender.com)
-export const TEXT2SQL_API_URL =
-  import.meta.env.VITE_TEXT2SQL_API_URL || "http://localhost:5000";
+
+export const TEXT2SQL_API_URL = import.meta.env.VITE_TEXT2SQL_API_URL;
 
 // Base URL for REST API endpoints (Factory, DC, Store KPIs, etc.)
 // This should point to the same backend as TEXT2SQL_API_URL
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_TEXT2SQL_API_URL || "http://localhost:5000";
+export const API_BASE_URL = import.meta.env.VITE_TEXT2SQL_API_URL;
 
 export interface QueryResponse {
   sql: string;
@@ -43,11 +38,12 @@ export const sendQuery = async (question: string): Promise<QueryResponse> => {
     host === "[::1]";
 
   // Determine endpoints based on environment
-  // In localhost: use proxy to avoid CORS
+  // In localhost: use proxy to avoid CORS (proxy points to VITE_TEXT2SQL_API_URL)
   // In production: use direct URL (backend has CORS configured)
+  // Always use the URL from environment variable (VITE_TEXT2SQL_API_URL)
   const endpoints = isLocalhost
-    ? ["/api/text2sql/query"]  // Use Vite proxy in development
-    : [`${TEXT2SQL_API_URL}/query`];  // Direct call in production (CORS enabled on backend)
+    ? ["/api/text2sql/query"]  // Use Vite proxy in development (proxy targets VITE_TEXT2SQL_API_URL)
+    : [`${TEXT2SQL_API_URL}/query`];  // Direct call in production (uses VITE_TEXT2SQL_API_URL)
 
   let lastError: unknown = null;
 
