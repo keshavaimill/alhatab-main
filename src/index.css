@@ -1,0 +1,777 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 8%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 8%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 8%;
+
+    /* Primary: Steel Blue (#1F77B4) */
+    --primary: 207 70% 42%;
+    --primary-foreground: 0 0% 98%;
+
+    /* Secondary: Light Steel Blue tint */
+    --secondary: 207 30% 95%;
+    --secondary-foreground: 207 70% 42%;
+
+    /* Muted: Gray (#7F7F7F) */
+    --muted: 0 0% 50%;
+    --muted-foreground: 0 0% 35%;
+
+    /* Accent: Cyan Blue (#17BECF) */
+    --accent: 185 78% 48%;
+    --accent-foreground: 0 0% 98%;
+
+    /* Destructive: Crimson Red (#D62728) */
+    --destructive: 359 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Success: Medium Green (#2CA02C) */
+    --success: 120 61% 39%;
+    --success-foreground: 0 0% 98%;
+
+    /* Warning: Orange (#FF7F0E) */
+    --warning: 25 100% 53%;
+    --warning-foreground: 0 0% 98%;
+
+    --border: 207 20% 85%;
+    --input: 207 20% 90%;
+    --ring: 207 70% 42%;
+
+    --radius: 0.75rem;
+
+    /* Chart colors from palette */
+    --chart-1: 207 70% 42%; /* Steel Blue */
+    --chart-2: 25 100% 53%; /* Orange */
+    --chart-3: 120 61% 39%; /* Medium Green */
+    --chart-4: 268 45% 57%; /* Amethyst Purple */
+    --chart-5: 185 78% 48%; /* Cyan Blue */
+
+    /* Chart color palette - hex values for direct use */
+    --color-steel-blue: #1F77B4;
+    --color-orange: #FF7F0E;
+    --color-medium-green: #2CA02C;
+    --color-crimson-red: #D62728;
+    --color-amethyst-purple: #9467BD;
+    --color-saddle-brown: #8C564B;
+    --color-orchid-pink: #E377C2;
+    --color-gray: #7F7F7F;
+    --color-cyan-blue: #17BECF;
+
+    /* Sidebar: White theme */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 8%;
+    --sidebar-primary: 207 70% 42%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 207 30% 95%;
+    --sidebar-accent-foreground: 207 70% 42%;
+    --sidebar-border: 207 20% 88%;
+    --sidebar-ring: 207 70% 42%;
+
+    /* Custom gradients using palette colors */
+    --gradient-primary: linear-gradient(135deg, #1F77B4 0%, #17BECF 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(207 20% 98%) 100%);
+    --gradient-success: linear-gradient(135deg, #2CA02C 0%, #17BECF 100%);
+    --gradient-warning: linear-gradient(135deg, #FF7F0E 0%, #E377C2 100%);
+    --gradient-danger: linear-gradient(135deg, #D62728 0%, #8C564B 100%);
+
+    --shadow-glow: 0 0 40px hsl(207 70% 42% / 0.1);
+    --shadow-card: 0 4px 24px hsl(207 70% 42% / 0.08);
+
+    /* Status colors from palette */
+    --status-good: 120 61% 39%; /* Medium Green */
+    --status-warning: 25 100% 53%; /* Orange */
+    --status-danger: 359 70% 50%; /* Crimson Red */
+  }
+
+  .dark {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    /* Prevent text selection issues on mobile */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent pull-to-refresh on mobile */
+    overscroll-behavior-y: contain;
+    overflow-x: hidden;
+  }
+  
+  /* Prevent horizontal scroll on all containers */
+  * {
+    max-width: 100%;
+  }
+  
+  /* Mobile-specific optimizations */
+  @media (max-width: 768px) {
+    main {
+      overflow-x: hidden;
+    }
+    
+    /* Better touch targets */
+    button, a, [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    @apply font-semibold tracking-tight;
+  }
+
+  .font-mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* RTL Support - Only set direction attribute, no visual changes */
+  [dir="rtl"] {
+    direction: rtl;
+  }
+
+  [dir="ltr"] {
+    direction: ltr;
+  }
+}
+
+@layer components {
+  .kpi-card {
+    @apply relative overflow-hidden rounded-xl bg-card border border-border/50 p-5;
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .kpi-card::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: var(--gradient-primary);
+  }
+
+  .kpi-card:hover::before {
+    @apply opacity-5;
+  }
+
+  .status-dot {
+    @apply w-2.5 h-2.5 rounded-full;
+  }
+
+  .status-good {
+    @apply bg-success;
+  }
+
+  .status-warning {
+    @apply bg-warning;
+  }
+
+  .status-danger {
+    @apply bg-destructive;
+  }
+
+  .status-muted {
+    @apply bg-muted;
+  }
+
+  .status-dot.status-good {
+    background-color: hsl(var(--success));
+    box-shadow: 0 0 8px hsl(var(--success) / 0.5);
+  }
+
+  .status-dot.status-warning {
+    background-color: hsl(var(--warning));
+    box-shadow: 0 0 8px hsl(var(--warning) / 0.5);
+  }
+
+  .status-dot.status-danger {
+    background-color: hsl(var(--destructive));
+    box-shadow: 0 0 8px hsl(var(--destructive) / 0.5);
+  }
+
+  .data-table {
+    @apply w-full text-xs sm:text-sm;
+  }
+
+  .data-table th {
+    @apply text-left text-muted-foreground font-medium py-2 sm:py-3 px-2 sm:px-4 border-b border-border/50;
+    @apply whitespace-nowrap;
+  }
+
+  .data-table td {
+    @apply py-2 sm:py-3 px-2 sm:px-4 border-b border-border/30;
+    @apply whitespace-nowrap;
+  }
+
+  .data-table tbody tr {
+    @apply transition-colors hover:bg-secondary/50 cursor-pointer;
+  }
+
+  /* Mobile table optimizations */
+  @media (max-width: 640px) {
+    .data-table th,
+    .data-table td {
+      @apply text-[10px] sm:text-xs;
+      padding: 0.5rem 0.5rem;
+    }
+    
+    .data-table th:first-child,
+    .data-table td:first-child {
+      @apply sticky left-0 bg-card z-10;
+      box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+    }
+  }
+  
+  /* Scrollbar styling for tables */
+  .overflow-x-auto {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  
+  .overflow-x-auto::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  .overflow-x-auto::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .overflow-x-auto::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+    border-radius: 3px;
+  }
+  
+  .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.3);
+  }
+
+  .nav-item {
+    @apply flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all duration-200;
+    @apply min-h-[44px] touch-manipulation; /* Better touch target */
+    color: hsl(var(--sidebar-foreground));
+    opacity: 0.85;
+  }
+
+  .nav-item:hover,
+  .nav-item:active {
+    background-color: hsl(var(--sidebar-accent));
+    color: hsl(var(--sidebar-foreground));
+    opacity: 1;
+  }
+
+  .nav-item.active {
+    background-color: hsl(var(--sidebar-accent));
+    color: hsl(var(--sidebar-primary));
+    opacity: 1;
+    border-left: 3px solid hsl(var(--sidebar-primary));
+  }
+
+  .filter-button {
+    @apply px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200;
+    @apply bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground;
+    @apply min-h-[36px] touch-manipulation; /* Better touch target */
+  }
+
+  .filter-button.active {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  .map-pin {
+    @apply absolute w-4 h-4 rounded-full transform -translate-x-1/2 -translate-y-1/2 cursor-pointer;
+    @apply transition-transform duration-200 hover:scale-150;
+  }
+
+  .map-pin::after {
+    content: '';
+    @apply absolute inset-0 rounded-full animate-ping opacity-30;
+    background: inherit;
+  }
+
+  .funnel-step {
+    @apply relative flex items-center justify-center py-6 px-4;
+    clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 50%, calc(100% - 20px) 100%, 0 100%, 20px 50%);
+  }
+
+  .funnel-step:first-child {
+    clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 50%, calc(100% - 20px) 100%, 0 100%);
+  }
+
+  .sparkline-container {
+    @apply h-6 sm:h-8 w-16 sm:w-20;
+  }
+
+  /* Mobile optimizations */
+  @media (max-width: 640px) {
+    .kpi-card {
+      @apply p-3 sm:p-4;
+    }
+
+    /* Hide sparklines on very small screens */
+    .sparkline-container {
+      @apply hidden sm:block;
+    }
+    
+    /* Better spacing for mobile */
+    .space-y-4 > * + * {
+      margin-top: 0.75rem;
+    }
+
+    .space-y-6 > * + * {
+      margin-top: 1rem;
+    }
+  }
+
+  /* Touch-friendly targets */
+  @media (hover: none) and (pointer: coarse) {
+    button,
+    a,
+    .nav-item,
+    .kpi-card {
+      @apply min-h-[44px];
+    }
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Optimize font loading */
+  @font-face {
+    font-family: 'IBM Plex Sans';
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    font-display: swap;
+  }
+
+  /* Leaflet map customizations */
+  .leaflet-container {
+    @apply bg-background;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+
+  .leaflet-popup-content-wrapper {
+    @apply bg-card border-2 border-border rounded-lg shadow-xl;
+    padding: 0 !important;
+    background: hsl(var(--card)) !important;
+  }
+
+  .leaflet-popup-content {
+    @apply m-0;
+    margin: 0 !important;
+  }
+
+  .leaflet-popup-tip {
+    @apply bg-card border-l-2 border-b-2 border-border;
+    background: hsl(var(--card)) !important;
+  }
+  
+  /* Custom popup styling */
+  .custom-popup .leaflet-popup-content-wrapper {
+    @apply bg-card border-2 border-border rounded-lg shadow-xl;
+    background: hsl(var(--card)) !important;
+    padding: 0 !important;
+  }
+  
+  .custom-popup .leaflet-popup-content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Popup close button styling */
+  .leaflet-popup-close-button {
+    @apply text-foreground hover:text-destructive;
+    font-size: 20px !important;
+    font-weight: bold !important;
+    padding: 8px !important;
+    width: 28px !important;
+    height: 28px !important;
+    line-height: 1 !important;
+    border-radius: 4px !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .leaflet-popup-close-button:hover {
+    @apply bg-destructive/10;
+  }
+
+  .leaflet-control-zoom {
+    @apply border-border rounded-lg overflow-hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .leaflet-control-zoom a {
+    @apply bg-card text-foreground border-border;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+  }
+
+  .leaflet-control-zoom a:hover {
+    @apply bg-secondary;
+  }
+
+  .leaflet-control-zoom-in,
+  .leaflet-control-zoom-out {
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .custom-status-marker {
+    background: transparent !important;
+    border: none !important;
+  }
+  
+  /* Ensure custom markers are visible and circular */
+  .leaflet-marker-icon.custom-status-marker {
+    background: transparent !important;
+    border: none !important;
+    width: 16px !important;
+    height: 16px !important;
+  }
+  
+  /* Make sure marker divs are visible and perfectly circular */
+  .leaflet-div-icon.custom-status-marker {
+    background: transparent !important;
+    border: none !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .leaflet-div-icon.custom-status-marker .map-marker-pin {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    min-height: 16px !important;
+    max-width: 16px !important;
+    max-height: 16px !important;
+    border-radius: 50% !important;
+    aspect-ratio: 1 / 1 !important;
+    box-sizing: border-box !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+  }
+  
+  /* Prevent any stretching or distortion */
+  .leaflet-div-icon.custom-status-marker img {
+    display: none !important;
+  }
+  
+  /* Hover effect for markers - maintain circular shape */
+  .leaflet-div-icon.custom-status-marker:hover .map-marker-pin {
+    transform: translate(-50%, -50%) scale(1.5) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.8), 0 0 0 3px rgba(0,0,0,0.15);
+    z-index: 2000;
+  }
+  
+  /* Active/clicked marker state - maintain circular shape */
+  .leaflet-div-icon.custom-status-marker.active .map-marker-pin {
+    transform: translate(-50%, -50%) scale(1.6) !important;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.9), 0 0 0 4px rgba(0,0,0,0.2);
+    z-index: 2000;
+  }
+  
+  /* Ensure markers have proper z-index */
+  .leaflet-marker-pane {
+    z-index: 600 !important;
+  }
+  
+  /* Ensure marker pane is above tile layer */
+  .leaflet-pane {
+    z-index: 400;
+  }
+  
+  .leaflet-marker-pane {
+    z-index: 600;
+  }
+
+  /* Ensure map fits within container */
+  .leaflet-container.leaflet-touch {
+    border-radius: 0.75rem;
+  }
+
+  /* Floating Bot Button Enhancements */
+  .floating-bot-button {
+    @apply fixed bottom-4 right-4 sm:bottom-6 sm:right-6 rounded-2xl shadow-2xl transition-all duration-300 z-40;
+    @apply w-14 h-14 touch-manipulation; /* Better touch target */
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    box-shadow: 0 8px 32px hsl(var(--primary) / 0.3);
+  }
+
+  .floating-bot-button:hover {
+    box-shadow: 0 12px 48px hsl(var(--primary) / 0.4);
+    transform: translateY(-2px);
+  }
+
+  .floating-bot-button:active {
+    transform: scale(0.95);
+  }
+
+  /* Chat Window Enhancements */
+  .chat-window {
+    @apply rounded-xl border-2 border-primary/20 shadow-2xl backdrop-blur-sm;
+    background: hsl(var(--card));
+    box-shadow: 0 20px 60px hsl(var(--primary) / 0.15);
+  }
+
+  /* Message Bubbles */
+  .message-bubble-user {
+    @apply rounded-lg p-3;
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    box-shadow: 0 4px 12px hsl(var(--primary) / 0.2);
+  }
+
+  .message-bubble-assistant {
+    @apply rounded-lg p-3 bg-secondary;
+    box-shadow: 0 2px 8px hsl(var(--foreground) / 0.05);
+  }
+
+  /* Top Bar Enhancements */
+  .top-bar {
+    @apply border-b border-border backdrop-blur-sm;
+    background: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.95) 100%);
+    box-shadow: 0 1px 3px hsl(var(--foreground) / 0.05);
+  }
+
+  /* Ripple Effects for Floating Bot */
+  .ripple-1,
+  .ripple-2,
+  .ripple-3 {
+    width: 56px;
+    height: 56px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    animation: ripple 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  .ripple-1 {
+    animation-delay: 0s;
+  }
+
+  .ripple-2 {
+    animation-delay: 1s;
+  }
+
+  .ripple-3 {
+    animation-delay: 2s;
+  }
+
+  @keyframes ripple {
+    0% {
+      width: 56px;
+      height: 56px;
+      opacity: 0.6;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+      opacity: 0.3;
+    }
+    100% {
+      width: 120px;
+      height: 120px;
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(2.14);
+    }
+  }
+
+  /* Smooth image rendering for floating bot */
+  .floating-bot-button img,
+  button img {
+    image-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+
+  /* Mobile optimizations */
+  @media (max-width: 640px) {
+    /* Improve touch targets */
+    button,
+    a,
+    input,
+    select,
+    textarea {
+      @apply min-h-[44px];
+    }
+
+    /* Optimize scrolling */
+    * {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Reduce animations on mobile for better performance */
+    @media (prefers-reduced-motion: no-preference) {
+      .animate-fade-in,
+      .animate-slide-up {
+        animation-duration: 0.3s;
+      }
+    }
+  }
+
+  /* Touch manipulation for better mobile interactions */
+  button,
+  a,
+  [role="button"],
+  .nav-item,
+  .filter-button {
+    touch-action: manipulation;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Smooth scrolling for tables */
+  .data-table-wrapper {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+    overflow-x: auto;
+    width: 100%;
+  }
+
+  .data-table-wrapper::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .data-table-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .data-table-wrapper::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+    border-radius: 3px;
+  }
+
+  .data-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground));
+  }
+
+  /* Mobile table optimizations */
+  @media (max-width: 640px) {
+    .data-table-wrapper {
+      margin-left: -0.75rem;
+      margin-right: -0.75rem;
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+  }
+
+  /* Responsive chart containers */
+  .chart-container {
+    @apply w-full;
+    min-height: 250px;
+  }
+
+  @media (min-width: 640px) {
+    .chart-container {
+      min-height: 300px;
+    }
+  }
+
+  /* Mobile-optimized spacing */
+  @media (max-width: 640px) {
+    .space-y-6 > * + * {
+      margin-top: 1rem;
+    }
+  }
+
+  /* Better alignment for mobile cards */
+  @media (max-width: 640px) {
+    .bg-card {
+      @apply rounded-lg;
+    }
+  }
+
+  /* Touch-friendly select and input */
+  @media (max-width: 640px) {
+    select,
+    input[type="text"],
+    input[type="number"],
+    textarea {
+      font-size: 16px; /* Prevents zoom on iOS */
+    }
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+  }
+
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 20px hsl(0 0% 98% / 0.1); }
+    50% { box-shadow: 0 0 40px hsl(0 0% 98% / 0.2); }
+  }
+}

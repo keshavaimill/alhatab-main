@@ -1,0 +1,10 @@
+flask
+flask-cors
+gunicorn
+pandas
+matplotlib
+langchain
+langchain-openai
+langchain-google-genai
+python-dotenv
+

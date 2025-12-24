@@ -1,0 +1,142 @@
+{
+  "global_rules": {
+    "sql_dialect": "sqlite",
+    "case_insensitive_matching": "SQLite does not support ILIKE. Always use LOWER(column) LIKE '%value%'",
+    "forecast_rule": "Forecasted datetime is never stored directly. It must be computed as timestamp + forecast_hour_offset (in hours).",
+    "forecast_sql_expression_sqlite": "datetime(timestamp, '+' || forecast_hour_offset || ' hours')",
+    "critical_warnings": [
+      "NEVER filter forecast tables directly using timestamp for date ranges",
+      "ALWAYS compute forecast_time before applying BETWEEN, GROUP BY, or ORDER BY",
+      "Use partial / substring matching for store_id and dc_id unless user provides an exact ID",
+      "INSERT, UPDATE, and ALTER operations are ONLY allowed on explicitly writable tables"
+    ]
+  },
+
+  "tables": {
+    "store_168h_forecasts": {
+      "description": "Hourly demand forecasts at individual store level. Each row represents forecasted demand for a store at a future hour relative to the forecast generation timestamp.",
+      "forecast_semantics": {
+        "definition": "Forecasted datetime must be computed as timestamp + forecast_hour_offset.",
+        "sql_expression_sqlite": "datetime(timestamp, '+' || forecast_hour_offset || ' hours')"
+      },
+      "columns": {
+        "store_id": {
+          "description": "Unique identifier for a retail store. Store IDs encode brand, city, store format, and store number using underscore-separated tokens.",
+          "type": "string",
+          "semantic_role": "store_identifier",
+          "matching_rule": "ALWAYS use case-insensitive partial match",
+          "sql_rule_sqlite": "LOWER(store_id) LIKE '%token1%token2%'",
+          "semantic_hints": [
+            "User-provided location names must be tokenized and matched as substrings",
+            "Do not expect spaces in store_id values",
+            "Use equality only if the user provides the full exact store_id"
+          ]
+        },
+        "timestamp": {
+          "description": "Forecast generation timestamp indicating when the forecast model ran. This is NOT the forecasted datetime.",
+          "type": "datetime",
+          "usage_rule": "Use only to compute forecast_time"
+        },
+        "forecast_hour_offset": {
+          "description": "Number of hours ahead from the timestamp for which demand is forecasted.",
+          "type": "integer"
+        },
+        "predicted_demand": {
+          "description": "Forecasted demand quantity for the store at the computed forecast_time.",
+          "type": "float",
+          "aggregation_rule": "Can be summed, averaged, or grouped by time"
+        }
+      }
+    },
+
+    "dc_168h_forecasts": {
+      "description": "Hourly demand forecasts aggregated at the distribution center (DC) level. Each row represents forecasted demand for a DC at a future hour relative to the forecast generation timestamp.",
+      "forecast_semantics": {
+        "definition": "Forecasted datetime must be computed as timestamp + forecast_hour_offset.",
+        "sql_expression_sqlite": "datetime(timestamp, '+' || forecast_hour_offset || ' hours')"
+      },
+      "columns": {
+        "dc_id": {
+          "description": "Unique identifier of a distribution center. DC IDs encode geographic location and facility role as substrings within the identifier.",
+          "type": "string",
+          "semantic_role": "distribution_center_identifier",
+          "matching_rule": "ALWAYS use case-insensitive partial match",
+          "sql_rule_sqlite": "LOWER(dc_id) LIKE '%token1%token2%'",
+          "semantic_hints": [
+            "User-provided locations should be matched using substring logic",
+            "Never use equality unless user provides the exact dc_id"
+          ]
+        },
+        "timestamp": {
+          "description": "Forecast generation timestamp indicating when the forecast model ran. This is NOT the forecasted datetime.",
+          "type": "datetime",
+          "usage_rule": "Use only to compute forecast_time"
+        },
+        "forecast_hour_offset": {
+          "description": "Number of hours ahead from the timestamp for which demand is forecasted.",
+          "type": "integer"
+        },
+        "predicted_demand": {
+          "description": "Forecasted demand quantity for the distribution center at the computed forecast_time.",
+          "type": "float",
+          "aggregation_rule": "Can be summed or averaged depending on analysis intent"
+        }
+      }
+    },
+
+    "order_log": {
+      "description": "Operational order log table used to persist supply or replenishment orders derived from forecasted demand. This table represents execution-level decisions rather than predictions.",
+      "writable": true,
+      "write_rules": {
+        "allowed_operations": ["INSERT", "UPDATE", "ALTER"],
+        "primary_intent": "Stores finalized or adjusted order quantities generated from forecasts",
+        "mutation_constraints": [
+          "INSERT is the preferred operation for creating new orders",
+          "UPDATE should be used only for quantity correction or metadata adjustment",
+          "DELETE is not allowed via LLM-generated SQL"
+        ]
+      },
+      "columns": {
+        "order_id": {
+          "description": "Unique identifier for an order record. Generated at insert time.",
+          "type": "string",
+          "generation_rule": "Use hex(randomblob(16)) or equivalent UUID generator"
+        },
+        "product_id": {
+          "description": "SKU or product identifier for which the order is placed.",
+          "type": "string",
+          "semantic_role": "product_identifier",
+          "matching_rule": "Use exact match unless otherwise specified by the user"
+        },
+        "forecast_date": {
+          "description": "Calendar date (YYYY-MM-DD) for which the forecasted demand was aggregated to generate this order.",
+          "type": "date",
+          "semantic_role": "forecast_target_date",
+          "usage_rule": "Derived by computing forecast_time from forecast tables and truncating to date"
+        },
+        "order_date": {
+          "description": "Date on which the order was created or recorded.",
+          "type": "date",
+          "default_rule": "Use date('now') if not explicitly provided"
+        },
+        "quantity": {
+          "description": "Final ordered quantity. Typically derived by aggregating predicted_demand from forecast tables.",
+          "type": "integer",
+          "aggregation_origin": "SUM(predicted_demand)",
+          "update_rule": "May be updated only to adjust quantities, not to recompute forecasts"
+        },
+        "created_at": {
+          "description": "Exact timestamp when the order record was inserted into the system.",
+          "type": "datetime",
+          "default_rule": "Use datetime('now')"
+        },
+        "source": {
+          "description": "Indicates how the order was generated.",
+          "type": "string",
+          "allowed_values": ["forecast", "manual", "override"],
+          "default_rule": "forecast"
+        }
+      }
+    }
+  }
+}
