@@ -256,11 +256,18 @@ def query():
             rows_affected = result
             
             # Generate LLM email summary (V2-main feature)
-            email_content = generate_llm_summary(sql, rows_affected)
+            try:
+
+                email_content = generate_llm_summary(sql, rows_affected)
+                logger.info("✅ Email summary generated successfully")
+            except Exception as e:
+                logger.info(f"Error generating email summary: {str(e)}")
+                
 
             # Persist transactional table and send email
             try:
                 persist_order_log(db_path)
+                logger.info("✅ Order log persisted successfully")
             except Exception as e:
                 logger.info(f"Warning: Failed to persist order_log: {str(e)}")
             
@@ -270,6 +277,7 @@ def query():
                     subject=email_content["subject"],
                     body=email_content["body"]
                 )
+                logger.info("✅ Success email sent successfully")
             except Exception as e:
                 logger.info(f"Warning: Failed to send email: {str(e)}")
 
