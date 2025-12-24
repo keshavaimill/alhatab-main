@@ -13,6 +13,14 @@ There are several ways of editing your application.
 
 
 
+
+
+
+
+
+
+
+
 Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.   kdkcmksmkdm
 
 Changes made via Lovable will be committed automatically to this repo.
@@ -69,8 +77,24 @@ Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and 
 
 ## Can I connect a custom domain to my Lovable project?
 
+
+
+
+
+
+
+
+
 Yes, you can!
 
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+
+
+
+
+
+
+
