@@ -2,6 +2,33 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import json
 import os
+import logging
+
+def setup_logger():
+    """
+    Sets up a logger with a console handler.
+    """
+    # Create a logger
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)  # Set minimum log level
+
+    # Prevent adding multiple handlers if setup_logger is called multiple times
+    if not logger.handlers:
+        # Create console handler
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG)  # Handler log level
+
+        # Create formatter for log messages
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+        console_handler.setFormatter(formatter)
+
+        # Add handler to logger
+        logger.addHandler(console_handler)
+
+    return logger
+logger = setup_logger()
 
 # Load environment variables from .env file FIRST (before any other imports that might need them)
 from dotenv import load_dotenv
@@ -62,10 +89,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # This is the single source of truth for the entire application
 try:
     global_data_layer.initialize(BASE_DIR)
-    print("✅ Global data layer initialized successfully")
+    logger.info("✅ Global data layer initialized successfully")
 except Exception as e:
-    print(f"⚠️  Warning: Failed to initialize data layer: {str(e)}")
-    print("⚠️  REST API endpoints may not work correctly. Text2SQL chatbot will still function.")
+    logger.info(f"⚠️  Warning: Failed to initialize data layer: {str(e)}")
+    logger.info("⚠️  REST API endpoints may not work correctly. Text2SQL chatbot will still function.")
 
 # ---------------------------------------------
 # LOAD SCHEMA
@@ -94,9 +121,9 @@ loaded_schema = schema_loader.load()
 db_path = os.path.join(BASE_DIR, "local.db")
 try:
     build_database(schema, db_path)
-    print("✅ Database built successfully")
+    logger.info("✅ Database built successfully")
 except Exception as e:
-    print(f"⚠️  Warning: Database build failed: {str(e)}")
+    logger.info(f"⚠️  Warning: Database build failed: {str(e)}")
 
 # Load schema metadata for Text2SQLAgent
 schema_metadata_path = os.path.join(BASE_DIR, "schema_metadata.json")
@@ -105,11 +132,11 @@ try:
     if os.path.exists(schema_metadata_path):
         with open(schema_metadata_path, "r") as f:
             schema_metadata = json.load(f)
-        print("✅ Schema metadata loaded successfully")
+        logger.info("✅ Schema metadata loaded successfully")
     else:
-        print(f"⚠️  Warning: schema_metadata.json not found at {schema_metadata_path}")
+        logger.info(f"⚠️  Warning: schema_metadata.json not found at {schema_metadata_path}")
 except Exception as e:
-    print(f"⚠️  Warning: Failed to load schema metadata: {str(e)}")
+    logger.info(f"⚠️  Warning: Failed to load schema metadata: {str(e)}")
 
 
 # ---------------------------------------------
@@ -124,33 +151,33 @@ try:
     if config.LLM_PROVIDER == "google":
         if not config.GOOGLE_API_KEY:
             raise ValueError("GOOGLE_API_KEY is required but not set. Please check your .env file.")
-        print(f"✅ Using Google Gemini API (model: {config.GOOGLE_MODEL})")
+        logger.info(f"✅ Using Google Gemini API (model: {config.GOOGLE_MODEL})")
         if config.GOOGLE_API_KEY and len(config.GOOGLE_API_KEY) > 8:
             masked_key = '*' * (len(config.GOOGLE_API_KEY) - 8) + config.GOOGLE_API_KEY[-8:]
         else:
             masked_key = 'NOT SET' if not config.GOOGLE_API_KEY else 'SET (too short to mask)'
-        print(f"✅ API Key loaded: {masked_key}")
+        logger.info(f"✅ API Key loaded: {masked_key}")
     elif config.LLM_PROVIDER == "openai":
         if not config.OPENAI_API_KEY:
             raise ValueError("OPENAI_API_KEY is required but not set. Please check your .env file.")
-        print(f"✅ Using OpenAI API (model: {config.OPENAI_MODEL})")
+        logger.info(f"✅ Using OpenAI API (model: {config.OPENAI_MODEL})")
         if config.OPENAI_API_KEY and len(config.OPENAI_API_KEY) > 8:
             masked_key = '*' * (len(config.OPENAI_API_KEY) - 8) + config.OPENAI_API_KEY[-8:]
         else:
             masked_key = 'NOT SET' if not config.OPENAI_API_KEY else 'SET (too short to mask)'
-        print(f"✅ API Key loaded: {masked_key}")
+        logger.info(f"✅ API Key loaded: {masked_key}")
     
     t2s = Text2SQLAgent(db_path, loaded_schema, schema_metadata)
     summarizer = SummarizerAgent()
-    print("✅ Agents initialized successfully")
+    logger.info("✅ Agents initialized successfully")
 except Exception as e:
     agent_error = str(e)
-    print(f"⚠️  Warning: Failed to initialize agents: {agent_error}")
-    print("⚠️  The /query endpoint will return errors until agents are properly configured.")
-    print("⚠️  Please check your .env file for LLM_PROVIDER and API keys.")
-    print(f"⚠️  Current LLM_PROVIDER: {config.LLM_PROVIDER}")
-    print(f"⚠️  GOOGLE_API_KEY set: {bool(config.GOOGLE_API_KEY)}")
-    print(f"⚠️  OPENAI_API_KEY set: {bool(config.OPENAI_API_KEY)}")
+    logger.info(f"⚠️  Warning: Failed to initialize agents: {agent_error}")
+    logger.info("⚠️  The /query endpoint will return errors until agents are properly configured.")
+    logger.info("⚠️  Please check your .env file for LLM_PROVIDER and API keys.")
+    logger.info(f"⚠️  Current LLM_PROVIDER: {config.LLM_PROVIDER}")
+    logger.info(f"⚠️  GOOGLE_API_KEY set: {bool(config.GOOGLE_API_KEY)}")
+    logger.info(f"⚠️  OPENAI_API_KEY set: {bool(config.OPENAI_API_KEY)}")
 
 # ---------------------------------------------
 # Text2SQL query endpoint (with V2 email functionality)
@@ -189,7 +216,7 @@ def query():
         try:
             sql = t2s.run(question)
         except Exception as e:
-            print(f"Error in Text2SQL agent: {str(e)}")
+            logger.info(f"Error in Text2SQL agent: {str(e)}")
             return jsonify({
                 "error": "Failed to generate SQL query",
                 "details": str(e),
@@ -205,15 +232,15 @@ def query():
             result = execute_sql(db_path, sql)
             # Log query result info for debugging
             if hasattr(result, 'empty'):
-                print(f"Query returned {len(result)} rows. Empty: {result.empty}")
+                logger.info(f"Query returned {len(result)} rows. Empty: {result.empty}")
                 if not result.empty:
-                    print(f"Columns: {result.columns.tolist()}")
-                    print(f"Sample data:\n{result.head(3).to_string()}")
+                    logger.info(f"Columns: {result.columns.tolist()}")
+                    logger.info(f"Sample data:\n{result.head(3).to_string()}")
             else:
-                print(f"Query result type: {type(result)}, value: {result}")
+                logger.info(f"Query result type: {type(result)}, value: {result}")
         except Exception as e:
-            print(f"Error executing SQL: {str(e)}")
-            print(f"Generated SQL: {sql}")
+            logger.info(f"Error executing SQL: {str(e)}")
+            logger.info(f"Generated SQL: {sql}")
             return jsonify({
                 "error": "Failed to execute SQL query",
                 "details": str(e),
@@ -235,7 +262,7 @@ def query():
             try:
                 persist_order_log(db_path)
             except Exception as e:
-                print(f"Warning: Failed to persist order_log: {str(e)}")
+                logger.info(f"Warning: Failed to persist order_log: {str(e)}")
             
             # Send email notification (V2-main feature)
             try:
@@ -244,7 +271,7 @@ def query():
                     body=email_content["body"]
                 )
             except Exception as e:
-                print(f"Warning: Failed to send email: {str(e)}")
+                logger.info(f"Warning: Failed to send email: {str(e)}")
 
             # Return response with email fields (V2-main format)
             return jsonify({
@@ -270,7 +297,7 @@ def query():
                 try:
                     summary = summarizer.summarize(question, df)
                 except Exception as e:
-                    print(f"Error summarizing results: {str(e)}")
+                    logger.info(f"Error summarizing results: {str(e)}")
                     # Use a fallback summary if summarization fails
                     summary = f"Query returned {len(df)} row(s). Columns: {', '.join(df.columns.tolist()[:5])}"
 
@@ -280,17 +307,17 @@ def query():
             viz, mime = None, None
             if wants_chart(question) and not df.empty:
                 try:
-                    print(f"Generating visualization for query: '{question}'")
-                    print(f"Data shape: {df.shape}, Columns: {df.columns.tolist()}")
+                    logger.info(f"Generating visualization for query: '{question}'")
+                    logger.info(f"Data shape: {df.shape}, Columns: {df.columns.tolist()}")
                     viz, mime = summarizer.generate_viz(question, df)
                     if viz:
-                        print(f"✅ Visualization generated successfully (size: {len(viz)} chars, mime: {mime})")
+                        logger.info(f"✅ Visualization generated successfully (size: {len(viz)} chars, mime: {mime})")
                     else:
-                        print(f"⚠️  Visualization generation returned None (no error thrown)")
+                        logger.info(f"⚠️  Visualization generation returned None (no error thrown)")
                 except Exception as e:
-                    print(f"❌ Error generating visualization: {str(e)}")
+                    logger.info(f"❌ Error generating visualization: {str(e)}")
                     import traceback
-                    traceback.print_exc()
+                    traceback.logger.info_exc()
                     # Continue without visualization if it fails
 
             return jsonify({
@@ -302,9 +329,9 @@ def query():
             })
     
     except Exception as e:
-        print(f"Unexpected error in /query endpoint: {str(e)}")
+        logger.info(f"Unexpected error in /query endpoint: {str(e)}")
         import traceback
-        traceback.print_exc()
+        traceback.logger.info_exc()
         return jsonify({
             "error": "Internal server error",
             "details": str(e),

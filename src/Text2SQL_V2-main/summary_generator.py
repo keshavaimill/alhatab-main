@@ -131,5 +131,4 @@ def generate_llm_summary(sql_query: str, row_count: int | None = None) -> dict:
             print(f"❌ LLM attempt {attempt} failed:", e)
 
     print("⚠️ All LLM attempts failed. Using fallback.")
-    return fallback_summary(row_count)
-
+    return fallback_summ
