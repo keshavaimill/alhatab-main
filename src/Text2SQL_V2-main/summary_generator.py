@@ -37,7 +37,7 @@ def get_llm(max_tokens: int):
     # Reload model with token limit for retries
     return load_llm(temp=0, max_tokens=max_tokens)
 
-logger.info("🤖 LLM Provider:", config.LLM_PROVIDER)
+logger.info(f"🤖 LLM Provider: {config.LLM_PROVIDER}")
 
 # -----------------------------
 # LLM PROMPT
