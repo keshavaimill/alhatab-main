@@ -14,7 +14,7 @@ export const fetchStoreHourlySales = async (
   }
   
   const params = new URLSearchParams({ store_id: storeId });
-  const response = await fetch(`http://localhost:5000/store-hourly-sales?${params.toString()}`);
+  const response = await fetch(`${API_BASE_URL}/store-hourly-sales?${params.toString()}`);
 
   if (!response.ok) {
     throw new Error(`Failed to fetch hourly sales data: ${response.statusText}`);
