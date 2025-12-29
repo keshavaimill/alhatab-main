@@ -379,6 +379,74 @@ def store_shelf_performance():
     return jsonify(results)
 
 
+@app.route("/store-hourly-sales", methods=["GET"])
+def store_hourly_sales():
+    """
+    Get hourly sales vs forecast data from historical_vs_model_comparison.csv.
+    
+    Aggregates actual_sales and predicted_demand by hour for a specific store.
+    """
+    import pandas as pd
+    
+    store_id = request.args.get("store_id", "ST_DUBAI_HYPER_01")
+    
+    try:
+        # Load the CSV file
+        csv_path = os.path.join(BASE_DIR, "datasets", "historical_vs_model_comparison.csv")
+        
+        if not os.path.exists(csv_path):
+            logger.warning(f"CSV file not found: {csv_path}")
+            return jsonify({"error": "Historical comparison data not available"}), 404
+        
+        # Read CSV
+        df = pd.read_csv(csv_path)
+        
+        # Filter by store_id
+        df_filtered = df[df["store_id"] == store_id].copy()
+        
+        if df_filtered.empty:
+            logger.warning(f"No data found for store_id: {store_id}")
+            return jsonify([])
+        
+        # Convert timestamp to datetime
+        df_filtered["timestamp"] = pd.to_datetime(df_filtered["timestamp"])
+        
+        # Extract hour from timestamp
+        df_filtered["hour"] = df_filtered["timestamp"].dt.hour
+        
+        # Aggregate by hour: sum actual_sales and predicted_demand
+        hourly_data = df_filtered.groupby("hour").agg({
+            "actual_sales": "sum",
+            "predicted_demand": "sum"
+        }).reset_index()
+        
+        # Format hour as "HH:00"
+        hourly_data["hour"] = hourly_data["hour"].apply(lambda x: f"{x:02d}:00")
+        
+        # Rename columns to match frontend expectations
+        hourly_data = hourly_data.rename(columns={
+            "actual_sales": "sales",
+            "predicted_demand": "forecast"
+        })
+        
+        # Convert to list of dictionaries
+        result = hourly_data[["hour", "sales", "forecast"]].to_dict(orient="records")
+        
+        # Ensure all 24 hours are present (fill missing hours with 0)
+        all_hours = [f"{h:02d}:00" for h in range(24)]
+        existing_hours = {item["hour"]: item for item in result}
+        complete_result = [
+            existing_hours.get(hour, {"hour": hour, "sales": 0, "forecast": 0})
+            for hour in all_hours
+        ]
+        
+        return jsonify(complete_result)
+        
+    except Exception as e:
+        logger.error(f"Error loading hourly sales data: {str(e)}")
+        return jsonify({"error": f"Failed to load hourly sales data: {str(e)}"}), 500
+
+
 # ---------------------------------------------
 # DC Inventory Age Distribution endpoint
 # ---------------------------------------------

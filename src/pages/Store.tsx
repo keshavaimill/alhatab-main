@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { KPICard } from "@/components/dashboard/KPICard";
-import { storeHourlySales, stockoutTimeline, shelfPerformance as fallbackShelfPerformance, storeActions, storeKPIs as fallbackStoreKPIs } from "@/lib/mockData";
+import { storeHourlySales as fallbackHourlySales, stockoutTimeline, shelfPerformance as fallbackShelfPerformance, storeActions, storeKPIs as fallbackStoreKPIs } from "@/lib/mockData";
 import { Store as StoreIcon, Package, AlertTriangle, DollarSign, TrendingUp, Lightbulb } from "lucide-react";
 import {
   LineChart,
@@ -17,6 +17,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { fetchStoreKpis, type StoreKpisResponse } from "@/api/storeKpis";
 import { fetchStoreShelfPerformance, type ShelfPerformanceItem } from "@/api/storeShelfPerformance";
+import { fetchStoreHourlySales, type HourlySalesData } from "@/api/storeHourlySales";
 
 const Store = () => {
   const { t } = useTranslation();
@@ -120,6 +121,8 @@ const Store = () => {
   const [isKpiLoading, setIsKpiLoading] = useState(false);
   const [shelfPerformance, setShelfPerformance] = useState<ShelfPerformanceItem[]>(fallbackShelfPerformance);
   const [isShelfLoading, setIsShelfLoading] = useState(false);
+  const [hourlySales, setHourlySales] = useState<HourlySalesData[]>(fallbackHourlySales);
+  const [isHourlySalesLoading, setIsHourlySalesLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -167,8 +170,28 @@ const Store = () => {
       }
     };
 
+    const loadHourlySales = async () => {
+      setIsHourlySalesLoading(true);
+      try {
+        const data = await fetchStoreHourlySales(selectedStore);
+        if (!cancelled) {
+          setHourlySales(data);
+        }
+      } catch (error) {
+        console.error("Failed to load hourly sales from backend, using fallback mock data.", error);
+        if (!cancelled) {
+          setHourlySales(fallbackHourlySales);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsHourlySalesLoading(false);
+        }
+      }
+    };
+
     loadKpis();
     loadShelfPerformance();
+    loadHourlySales();
     return () => {
       cancelled = true;
     };
@@ -263,8 +286,13 @@ const Store = () => {
           </div>
 
           <div className="h-[220px] sm:h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={storeHourlySales}>
+            {isHourlySalesLoading ? (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                <p className="text-sm">{t("pages.store.loadingHourlySales") || "Loading hourly sales data..."}</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={hourlySales}>
                 <defs>
                   <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
@@ -309,6 +337,7 @@ const Store = () => {
                 />
               </AreaChart>
             </ResponsiveContainer>
+            )}
           </div>
         </div>
 

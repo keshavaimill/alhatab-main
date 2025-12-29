@@ -179,12 +179,12 @@ export const ChatWindow = ({ isOpen, onClose }: ChatWindowProps) => {
                   dangerouslySetInnerHTML={{ __html: message.content }}
                 />
               ) : (
-                <ReactMarkdown
-                  className="prose prose-xs sm:prose-sm max-w-none whitespace-pre-wrap break-words text-xs sm:text-sm"
-                  remarkPlugins={[remarkGfm]}
-                >
-                  {message.content}
-                </ReactMarkdown>
+              <ReactMarkdown
+                className="prose prose-xs sm:prose-sm max-w-none whitespace-pre-wrap break-words text-xs sm:text-sm"
+                remarkPlugins={[remarkGfm]}
+              >
+                {message.content}
+              </ReactMarkdown>
               )}
 
               {/* SQL Query Display */}
